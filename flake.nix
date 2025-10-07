@@ -10,47 +10,33 @@
 # show nixos version:      nixos-version
 # 
 {
-  description = "Boot.dev Environment for Nix 24.11";
+  description = "Clean Python + Pygame development environment (pure Nix)";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable }: {
-    devShells = {
-      x86_64-linux.default  = self.buildDevShell "x86_64-linux";
-      aarch64-linux.default = self.buildDevShell "aarch64-linux";
-      x86_64-darwin.default = self.buildDevShell "x86_64-darwin";
-    };
-  } // {
-    buildDevShell = system: let
-      pkgs = import nixpkgs { inherit system; };
-      pkgsUnstable = import nixpkgs-unstable { inherit system; };
+  outputs = { self, nixpkgs }: {
+    devShells.x86_64-linux.default = let
+      # Import nixpkgs for this system
+      pkgs = import nixpkgs { system = "x86_64-linux"; };
     in
       pkgs.mkShell {
-        name = "impurePythonEnv";
-        venvDir = "./.venv";
+        name = "python-pygame-env";
 
-        packages = (with pkgs; [
-          go
-        ]) ++
-        ([
-          (pkgs.callPackage ./bootdev.nix {})
-        ]);
-
-        buildInputs = (with pkgs; [
-          python3Packages.python
-          python3Packages.venvShellHook
-        ]) ++ (with pkgsUnstable; [
+        # All tools and libraries available in the shell
+        packages = with pkgs; [
+          python311
           python311Packages.pygame
-        ]);
+          go
+        ];
 
-        postVenvCreation = ''
-          unset SOURCE_DATE_EPOCH
-          pip install -r requirements.txt
+        shellHook = ''
+          echo
+          echo "🐍 Python + 🎮 Pygame environment ready"
+          echo "Try: python3 -m pygame.examples.aliens"
+          echo
         '';
       };
   };
 }
-
