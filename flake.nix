@@ -8,36 +8,33 @@
 # show available packages: nix-env -qa
 #                          nix search nixpkgs
 # show nixos version:      nixos-version
-# 
+#
+ 
 {
-  description = "Python + Pygame + Boot.dev dev environment (pure Nix)";
+  description = "Python + Pygame + Boot.dev dev environment";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+    nixos-config.url = "nixos-config"; # uses registry entry
   };
 
-  outputs = { self, nixpkgs }: {
-    devShells.x86_64-linux.default = let
-      pkgs = import nixpkgs { system = "x86_64-linux"; };
-    in
-      pkgs.mkShell {
-        name = "python-pygame-bootdev-devshell";
+  outputs = { self, nixpkgs, nixos-config, ... }:
+    let
+      system = "x86_64-linux";
+      pkgs = import nixpkgs { inherit system; };
 
-        # All development tools go here
-        packages = with pkgs; [
-          python311
-          python311Packages.pygame
-          (pkgs.callPackage ./bootdev.nix {})
+      # import your shared shell template
+      pythonDev = import "${nixos-config}/lib/python-develop.nix";
+    in {
+      devShells.${system}.default = pythonDev {
+        inherit pkgs;
+        symbol = "🐍";
+        pythonVersion = pkgs.python311;
+        extraPackages = with pkgs.python311Packages; [
+          pygame
         ];
-
-        shellHook = ''
-          echo
-          echo "🐍 Python + 🎮 Pygame + 🧰 Boot.dev dev environment ready"
-          echo "Try: python3 -m pygame.examples.aliens"
-          echo "Try: bootdev --help"
-          echo
-        '';
+        message = "🐍 Pygame development shell ready";
       };
-  };
+    };
 }
 
