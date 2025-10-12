@@ -14,24 +14,33 @@
   description = "Python + Pygame + Boot.dev dev environment";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
-    nixos-config.url = "nixos-config"; # uses registry entry
+    nixos-config.url = "github:BerndDonner/NixOS-Config";
+    nixpkgs.follows = "nixos-config/nixpkgs";
   };
 
   outputs = { self, nixpkgs, nixos-config, ... }:
     let
       system = "x86_64-linux";
-      pkgs = import nixpkgs { inherit system; };
+      pkgs = import nixpkgs {
+        inherit system;
+        overlays = [ nixos-config.overlays.unstable ];
+      };
 
       # import your shared shell template
-      pythonDev = import "${nixos-config}/lib/python-develop.nix";
+      pythonDev = import (nixos-config + "/lib/python-develop.nix");
     in {
       devShells.${system}.default = pythonDev {
         inherit pkgs;
+        inputs = { inherit nixos-config nixpkgs; };
+        checkInputs = [ "nixos-config" ];
         symbol = "🐍";
         pythonVersion = pkgs.python311;
         extraPackages = with pkgs.python311Packages; [
           pygame
+        ] ++ [
+          pkgs.go
+          nixos-config.packages.${system}.bootdev-cli
+          # pkgs.unstable.bootdev-cli #too outdated
         ];
         message = "🐍 Pygame development shell ready";
       };
