@@ -23,20 +23,21 @@
       system = "x86_64-linux";
       pkgs = import nixpkgs {
         inherit system;
-        overlays = [ nixos-config.overlays.unstable ];
+        overlays = [ nixos-config.overlays.unstable nixos-config.overlays.pygame-avx2 ];
       };
 
       # import your shared shell template
       pythonDev = import (nixos-config + "/lib/python-develop.nix");
+
     in {
       devShells.${system}.default = pythonDev {
         inherit pkgs;
         inputs = { inherit nixos-config nixpkgs; };
         checkInputs = [ "nixos-config" ];
         symbol = "🐍";
-        pythonVersion = pkgs.python311;
-        extraPackages = with pkgs.python311Packages; [
-          pygame
+        pythonVersion = pkgs.python3;
+        extraPackages = [
+          pkgs.python3Packages.pygame-avx2
         ] ++ [
           pkgs.go
           nixos-config.packages.${system}.bootdev-cli
