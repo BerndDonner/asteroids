@@ -27,11 +27,14 @@
       };
 
       # import your shared shell template
-      pythonDev = import (nixos-config + "/lib/python-develop.nix");
+      pythonDev = nixos-config.lib.mkPythonDevShell;
 
     in {
       devShells.${system}.default = pythonDev {
         inherit pkgs;
+
+        flakeLockPath = ./flake.lock;
+
         inputs = { inherit nixos-config nixpkgs; };
         checkInputs = [ "nixos-config" ];
         symbol = "🐍";
