@@ -39,9 +39,8 @@
         checkInputs = [ "nixos-config" ];
         symbol = "🐍";
         pythonVersion = pkgs.python3;
+        pythonPackages = ps: [ ps.pygame-avx2 ];
         extraPackages = [
-          pkgs.python3Packages.pygame-avx2
-        ] ++ [
           pkgs.go
           nixos-config.packages.${system}.bootdev-cli
           # pkgs.unstable.bootdev-cli #too outdated
